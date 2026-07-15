@@ -1,0 +1,2 @@
+date,source,sp500_previous_close,sp500_open,sp500_gap,sp500_gap_pct,nasdaq100_previous_close,nasdaq100_open,nasdaq100_gap,nasdaq100_gap_pct,vix_previous_close,vix_open,vix_gap,vix_gap_pct,tnx_previous_close,tnx_open,tnx_gap,tnx_gap_pct,dxy_previous_close,dxy_open,dxy_gap,dxy_gap_pct,wti_previous_close,wti_open,wti_gap,wti_gap_pct
+2026-07-15,Yahoo Finance manual seed,7543.59,7571.72,28.130,0.373,29790.25,29805.00,14.750,0.050,16.50,16.20,-0.300,-1.818,4.5850,4.6080,0.0230,0.502,100.92,100.92,0.000,0.000,79.34,79.74,0.400,0.504
