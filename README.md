@@ -122,13 +122,31 @@ streamlit run app.py
 
 ## Automation and deployment
 
-`.github/workflows/daily_market.yml` runs on weekdays at 22:15 UTC, which is
-after the U.S. cash close in both Eastern Standard and Daylight Time. Python
+The primary scheduler in `automation/scheduler/` dispatches the existing
+`.github/workflows/daily_market.yml` at 16:20 America/New_York, checks again at
+16:25, and verifies readiness at 16:30. It uses Cloudflare Workers Free and
+GitHub's standard public-repository runners; no paid service is required.
+The workflow's weekday 22:15 UTC schedule remains a recovery fallback because
+GitHub's native scheduled events can be delayed. See the
+[scheduler setup and credential instructions](automation/scheduler/README.md).
+Python
 uses `America/New_York`, skips weekends, and treats a missing same-day S&P 500
 bar on an expected trading day as a failure. Regular NYSE holidays are listed
 in the code without an external calendar dependency; rare unplanned closures
 also fail visibly. If the date is already in `data/history.csv`, it makes no
-changes. Manual GitHub Actions runs accept an optional date for backfills.
+changes to that row, and repairs a missing PNG or SVG from the saved values.
+Manual GitHub Actions runs accept an optional date for backfills. The commit
+message names the resolved market date rather than the UTC commit date.
+
+The PeidongGao repository is the canonical collector. The WillGaoLab mirror's
+`mirror_market.yml` copies that date's row and exact PNG/SVG from a pinned
+canonical commit instead of collecting prices independently. Existing
+different historical mirror rows are not overwritten automatically. The CSV
+schema, figure paths, Python pipeline and Streamlit app remain the same.
+
+Collection after the close does not turn the eight opening gaps into closing
+returns. Bitcoin's current price is sampled at collection time, so the new
+16:20 collection window changes its snapshot timing for future records.
 
 For Streamlit Cloud, deploy this repository with `app.py` as the entry point;
 the service installs `requirements.txt` automatically. The hosted dashboard
