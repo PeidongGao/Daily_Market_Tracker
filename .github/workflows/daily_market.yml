@@ -1,8 +1,9 @@
 name: daily-market
+run-name: "Daily market — ${{ inputs.date || 'scheduled recovery' }}"
 
 on:
   schedule:
-    # 22:15 UTC is after the U.S. cash close in both EST and EDT.
+    # Recovery only. The external scheduler dispatches the primary 16:20 NY run.
     - cron: "15 22 * * 1-5"
   workflow_dispatch:
     inputs:
@@ -21,6 +22,7 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -30,16 +32,28 @@ jobs:
         run: python -m pip install -r requirements.txt
       - name: Run tests
         run: python -m unittest discover -s tests -v
-      - name: Fetch data and generate fingerprint
+      - name: Resolve market date
+        id: market-date
         env:
           TARGET_DATE: ${{ inputs.date }}
         run: |
-          if [ -n "$TARGET_DATE" ]; then
-            python scripts/daily_pipeline.py --date "$TARGET_DATE"
-          else
-            python scripts/daily_pipeline.py
-          fi
+          python - <<'PY'
+          import os
+          from datetime import date
+          from scripts.fetch_data import business_today
+          target = date.fromisoformat(os.environ['TARGET_DATE']) if os.environ.get('TARGET_DATE') else business_today()
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write(f'date={target.isoformat()}\n')
+          print(f'Market date: {target.isoformat()}')
+          PY
+      - name: Fetch data and generate fingerprint
+        env:
+          TARGET_DATE: ${{ steps.market-date.outputs.date }}
+        run: |
+          python scripts/daily_pipeline.py --date "$TARGET_DATE"
       - name: Commit updated history and figure
+        env:
+          TARGET_DATE: ${{ steps.market-date.outputs.date }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -47,6 +61,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "No market update to commit."
           else
-            git commit -m "chore: daily market update $(date -u +%Y-%m-%d)"
+            git commit -m "chore: daily market update $TARGET_DATE"
             git push
           fi
