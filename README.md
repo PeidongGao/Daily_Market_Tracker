@@ -140,8 +140,10 @@ message names the resolved market date rather than the UTC commit date.
 
 The PeidongGao repository is the canonical collector. The WillGaoLab mirror's
 `mirror_market.yml` copies that date's row and exact PNG/SVG from a pinned
-canonical commit instead of collecting prices independently. Existing
-different historical mirror rows are not overwritten automatically. The CSV
+canonical commit instead of collecting prices independently. Both repositories share the same code and workflows; repository guards run
+collection only in PeidongGao and copying only in WillGaoLab. The November 11,
+2026 synchronization aligned the older mirror archive to the canonical data.
+Future conflicting historical rows are not overwritten automatically. The CSV
 schema, figure paths, Python pipeline and Streamlit app remain the same.
 
 Collection after the close does not turn the eight opening gaps into closing

@@ -21,6 +21,7 @@ concurrency:
 
 jobs:
   update:
+    if: github.repository == 'PeidongGao/Daily_Market_Tracker'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
