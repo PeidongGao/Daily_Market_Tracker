@@ -39,6 +39,7 @@ Wrangler's secure prompt:
 cd automation/scheduler
 npm ci --ignore-scripts
 npm test
+npm run test:runtime
 npm run check
 npx wrangler secret put GITHUB_TOKEN
 npm run deploy
@@ -72,3 +73,11 @@ conflicting historical date into the mirror without a separately reviewed data
 correction. Logs contain outcome/date/commit identifiers, not tokens or response
 bodies. Use the Cloudflare dashboard's scheduled invocation status to inspect
 deadline failures; this component does not send email or other messages.
+
+## Runtime regression coverage
+
+The scheduler uses `redirect: "manual"` and rejects non-2xx responses, including
+redirects, without following them or forwarding credentials. Cloudflare workerd
+does not support `redirect: "error"`; Node-only mocks previously missed this
+runtime failure. CI now also runs the native workerd fetch path with intercepted
+GitHub responses, covering successful dispatch and rejection of redirects.

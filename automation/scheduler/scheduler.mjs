@@ -74,7 +74,9 @@ function github(token, fetcher) {
         "Cache-Control": "no-cache", ...(body ? { "Content-Type": "application/json" } : {}),
       },
       ...(body ? { body: JSON.stringify(body) } : {}),
-      signal: AbortSignal.timeout(15000), redirect: "error",
+      // Workers rejects redirect: "error" before sending the request.
+      // Manual mode prevents forwarding the credential; !ok rejects every 3xx.
+      signal: AbortSignal.timeout(15000), redirect: "manual",
     });
     if (!response.ok) {
       await response.body?.cancel();
