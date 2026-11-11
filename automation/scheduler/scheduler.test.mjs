@@ -13,6 +13,7 @@ function mock({ source = false, mirror = false, active = false, mismatch = false
   const posts = [], gets = [];
   const fetcher = async (url, options) => {
     assert.equal(options.headers.Authorization, "Bearer test-only-secret");
+    assert.equal(options.redirect, "manual");
     if (badStatus) return new Response("redacted", { status: badStatus });
     if (options.method === "POST") {
       posts.push({ url, body: JSON.parse(options.body) });
@@ -100,4 +101,14 @@ test("deadline failures and GitHub outages cannot masquerade as completion", asy
   }
   const unavailable = mock({ badStatus: 503 });
   await assert.rejects(tick(env, winter, unavailable.fetcher, winter), error => !error.message.includes("test-only-secret") && error.message.includes("HTTP 503"));
+});
+
+// A redirect must never be followed with the GitHub credential.
+test("GitHub redirects fail closed without dispatch or credential disclosure", async () => {
+  for (const status of [301, 302, 307, 308]) {
+    const m = mock({ badStatus: status });
+    await assert.rejects(tick(env, winter, m.fetcher, winter), error =>
+      error.message.includes(`HTTP ${status}`) && !error.message.includes(env.GITHUB_TOKEN));
+    assert.equal(m.posts.length, 0);
+  }
 });
